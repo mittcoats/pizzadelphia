@@ -1,11 +1,11 @@
 
 
-var marker = function(data) {
-
+var Marker = function(data) {
+  this.name = ko.observable(data.name);
+  this.location = ko.observable(data.location);
+  this.price_level = ko.observable(data.price_level);
+  this.rating = ko.observable(data.rating);
 }
-
-
-
 
 var ViewModel = function() {
   var self = this;
@@ -16,7 +16,7 @@ var ViewModel = function() {
   };
   var mapCanvas = document.getElementById('map');
 
-  var markers = [];
+  var markers = pizzerias;
 
 
   this.initMap = function() {
@@ -24,6 +24,12 @@ var ViewModel = function() {
   };
 
   this.initMap();
+
+  this.markerList = ko.observableArray([]);
+
+  markers.forEach(function(marker){
+    self.markerList.push(new Marker(marker));
+  });
 }
 
 var app = function() {

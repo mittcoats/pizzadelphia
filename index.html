@@ -10,7 +10,7 @@
           integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M"
           crossorigin="anonymous">
 
-    <link rel="stylesheet" href="assets/styles.css">      
+    <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
 
@@ -40,12 +40,8 @@
       <!-- list of markers -->
       <div class="col-lg-3">
         <h4>Ovens</h4>
-        <ul class="list-group">
-          <li class="list-group-item">Cras justo odio</li>
-          <li class="list-group-item">Dapibus ac facilisis in</li>
-          <li class="list-group-item">Morbi leo risus</li>
-          <li class="list-group-item">Porta ac consectetur ac</li>
-          <li class="list-group-item">Vestibulum at eros</li>
+        <ul class="list-group" data-bind="foreach: markerList">
+          <li class="list-group-item" data-bind="text: name"></li>
         </ul>
       </div>
 
@@ -68,6 +64,7 @@
 
   <!-- Knockout -->
   <script src="js/knockout-latest.js"></script>
+  <script src="js/pizzerias.js"></script>
   <script src="js/app.js"></script>
 
   <!-- Google Maps -->
