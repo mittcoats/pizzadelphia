@@ -1,4 +1,4 @@
 # Pizzadelphia ReadMe
 
 ## Google Maps api
-[https://developers.google.com/maps/documentation/javascript/adding-a-google-map]
+[Google Maps API](https://developers.google.com/maps/documentation/javascript/adding-a-google-map)
