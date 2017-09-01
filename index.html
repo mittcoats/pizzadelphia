@@ -40,8 +40,10 @@
       <!-- list of markers -->
       <div class="col-lg-3">
         <h4>Ovens</h4>
-        <ul class="list-group" data-bind="foreach: markerList">
-          <li class="list-group-item" data-bind="text: name"></li>
+        <ul class="list-group" data-bind="foreach: markers">
+          <li class="list-group-item" data-bind="text: name">
+            <span data-bind="text: $parent.position">hi</span>
+          </li>
         </ul>
       </div>
 
