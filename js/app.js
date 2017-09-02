@@ -30,7 +30,7 @@ var Location = function(map, google_data, yelp_data) {
   self.name = google_data.name;
   self.location = google_data.geometry.location;
   self.googleRating = google_data.rating;
-  self.priceLeve = google_data.price_level;
+  self.priceLevel = google_data.price_level;
   self.yelpRating = '';
 
   self.defaultIcon = makeMarkerIcon('D34836');
@@ -53,19 +53,15 @@ var Location = function(map, google_data, yelp_data) {
                              name +
                            '</div><div id="pano"></div>';
 
-  self.infoWindow = new google.maps.InfoWindow(self.infoWindowContent);
-
   self.marker.addListener('click', function() {
     populateInfoWindow(this, self.infoWindow)
   });
   self.marker.addListener('mouseover', function() {
     this.setIcon(self.highlightedIcon);
-  })
+  });
   self.marker.addListener('mouseout', function() {
     this.setIcon(self.defaultIcon);
-  })
-
-
+  });
 }
 
 // ================================
@@ -76,9 +72,12 @@ var ViewModel = function() {
   // Bind self to ViewModel
   var self = this;
   self.google_locations = pizzerias;
-
+  self.defaultIcon = makeMarkerIcon('D34836');
+  self.highlightedIcon = makeMarkerIcon('FFFF24');
   self.query = ko.observable('');
   self.locations = ko.observableArray([]);
+
+  self.infoWindow = new google.maps.InfoWindow();
 
   self.google_locations.forEach(function(google_location) {
     self.locations().push(new Location(map, google_location));
@@ -105,7 +104,7 @@ var ViewModel = function() {
     queryResults.forEach(function(location) {
       location.marker.setMap(map);
     });
-
+    console.log(queryResults);
     return queryResults;
   });
 
@@ -119,8 +118,22 @@ var ViewModel = function() {
   //   map.fitBounds(bounds);
   // });
 
-  self.selectMarker = function(marker) {
+  self.selectLocation = function(selected_location) {
+    console.log(selected_location);
+    self.infoWindow.setContent(selected_location.infoWindow)
+    self.infoWindow.open(map, selected_location.marker)
+    map.panTo(selected_location.marker.position);
+    selected_location.marker.setAnimation(google.maps.Animation.BOUNCE);
+    selected_location.marker.setIcon(self.highlightedIcon);
+
+    self.locations().forEach(function(unselected_location) {
+      if (selected_location != unselected_location) {
+        unselected_location.marker.setAnimation(null);
+        unselected_location.marker.setIcon(self.defaultIcon);
+      }
+    });
   };
+
 }
 
 // ========================
