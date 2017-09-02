@@ -21,24 +21,111 @@ var googleMap = function() {
 // === SetUp Yelp API ===
 // ======================
 
-// ======================
-// === SetUp Markers ====
-// ======================
+// =======================
+// === SetUp Locations ===
+// =======================
 
-// var Marker = function(data) {
-//   var self = this;
-//   this.name = data.name;
-//   this.location = data.geometry.location;
-//   this.googleRating = data.rating;
-//   this.priceLeve = data.price_level;
-//   this.yelpRating = '';
-//   this.infoWindow = new google.maps.InfoWindow();
-//   this.infoWindowContent = '<div>' +
-//                              name +
-//                            '</div><div id="pano"></div>';
-//
-//   this.infoWindow = new google.maps.InfoWindow(infoWindowContent);
-// }
+var Location = function(map, google_data, yelp_data) {
+  var self = this;
+  self.name = google_data.name;
+  self.location = google_data.geometry.location;
+  self.googleRating = google_data.rating;
+  self.priceLeve = google_data.price_level;
+  self.yelpRating = '';
+
+  self.defaultIcon = makeMarkerIcon('D34836');
+  self.highlightedIcon = makeMarkerIcon('FFFF24');
+
+  self.marker = (function() {
+    var position = self.location
+    var name = self.name;
+    var marker = new google.maps.Marker({
+      map: null,
+      position: position,
+      name: name,
+      icon: self.defaultIcon,
+      animation: google.maps.Animation.DROP
+    });
+    return marker;
+  })(self);
+
+  self.infoWindowContent = '<div>' +
+                             name +
+                           '</div><div id="pano"></div>';
+
+  self.infoWindow = new google.maps.InfoWindow(self.infoWindowContent);
+
+  self.marker.addListener('click', function() {
+    populateInfoWindow(this, self.infoWindow)
+  });
+  self.marker.addListener('mouseover', function() {
+    this.setIcon(self.highlightedIcon);
+  })
+  self.marker.addListener('mouseout', function() {
+    this.setIcon(self.defaultIcon);
+  })
+
+
+}
+
+// ================================
+// === SetUp Knockout ViewModel ===
+// ================================
+
+var ViewModel = function() {
+  // Bind self to ViewModel
+  var self = this;
+  self.google_locations = pizzerias;
+
+  self.query = ko.observable('');
+  self.locations = ko.observableArray([]);
+
+  self.google_locations.forEach(function(google_location) {
+    self.locations().push(new Location(map, google_location));
+  });
+
+  self.filteredMarkers = ko.computed(function() {
+    // clear markers
+    self.locations().forEach(function(location){
+      location.marker.setMap(null);
+    })
+    // Get query and declare variable to hold array of results
+    var processedQuery = self.query().toLowerCase();
+    var queryResults;
+
+    if (processedQuery === "") {
+      queryResults = self.locations();
+    } else {
+        queryResults = ko.utils.arrayFilter(self.locations(),
+         function(location) {
+          return location.marker.name.toLowerCase().includes(processedQuery);
+      });
+    }
+
+    queryResults.forEach(function(location) {
+      location.marker.setMap(map);
+    });
+
+    return queryResults;
+  });
+
+  // self.showMarkers = ko.computed(function() {
+  //   var bounds = new google.maps.LatLngBounds();
+  //   // Extend the boundaries of the map for each marker and display the marker
+  //   self.filteredMarkers.forEach(function(marker) {
+  //     marker.setMap(map)
+  //     bounds.extend(marker.position);
+  //   })
+  //   map.fitBounds(bounds);
+  // });
+
+  self.selectMarker = function(marker) {
+  };
+}
+
+// ========================
+// === Helper Functions ===
+// ========================
 
 // This function takes in a COLOR, and then creates a new marker
 // icon of that color. The icon will be 21 px wide by 34 high, have an origin
@@ -53,7 +140,6 @@ function makeMarkerIcon(markerColor) {
     new google.maps.Size(21,34));
   return markerImage;
 }
-
 
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
@@ -99,74 +185,6 @@ function populateInfoWindow(marker, infowindow) {
     // Open the infowindow on the correct marker.
     infowindow.open(map, marker);
   }
-}
-
-
-// ================================
-// === SetUp Knockout ViewModel ===
-// ================================
-
-var ViewModel = function() {
-  // Bind self to ViewModel
-  var self = this;
-  self.locations = pizzerias;
-  self.infoWindow = new google.maps.InfoWindow();
-  self.defaultIcon = makeMarkerIcon('D34836');
-  self.highlightedIcon = makeMarkerIcon('FFFF24');
-
-  self.query = ko.observable('');
-  self.markers = ko.observableArray([]);
-
-  self.locations.forEach(function(location) {
-    var position = location.geometry.location;
-    var name = location.name;
-    var id = location.id;
-    var marker = new google.maps.Marker({
-      map: null,
-      position: position,
-      id: id,
-      name: name,
-      icon: self.defaultIcon,
-      animation: google.maps.Animation.DROP
-    });
-
-    self.markers().push(marker);
-
-    marker.addListener('click', function() {
-      populateInfoWindow(this, infoWindow)
-    });
-    marker.addListener('mouseover', function() {
-      this.setIcon(self.highlightedIcon);
-    })
-    marker.addListener('mouseout', function() {
-      this.setIcon(self.defaultIcon);
-    })
-  });
-
-  var filteredMarkers = ko.computed(function() {
-    var processedQuery = self.query().toLowerCase();
-
-    if (processedQuery === "") {
-      return self.markers();
-    } else {
-        return ko.utils.arrayFilter(self.markers(), function(marker) {
-          return marker.name.toLowerCase().includes(processedQuery);
-      });
-    }
-    console.log(self.filteredMarkers);
-    showMarkers();
-  });
-
-  self.showMarkers = ko.computed(function() {
-    var bounds = new google.maps.LatLngBounds();
-    // Extend the boundaries of the map for each marker and display the marker
-    // self.locations.forEach(function(location)
-    filteredMarkers.forEach(function(marker) {
-      marker.setMap(map)
-      bounds.extend(marker.position);
-    })
-    map.fitBounds(bounds);
-  });
 }
 
 var app = function() {
