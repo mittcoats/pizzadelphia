@@ -1,12 +1,14 @@
 'use strict';
 
+var map;
+var venues;
+
+
 // ========================
 // === SetUp Google Map ===
 // ========================
 // API sample query https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=39.9485647,-75.189752&type=restaurant&radius=500&keyword=pizza&key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk
 // API sample query https://maps.googleapis.com/maps/api/place/textsearch/json?query=pizza+philadelphia&radius=500&key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk
-var map;
-var venues;
 
 var googleMap = function() {
   var mapOptions = {
@@ -20,6 +22,7 @@ var googleMap = function() {
   map = new google.maps.Map(mapCanvas, mapOptions)
   console.log('Google Maps API complete');
 }
+
 
 // ============================
 // === SetUp FourSquare API ===
@@ -49,21 +52,23 @@ var fourSquare = function() {
     })
       .done(function(data){
         venues = data.response.venues;
-
         ko.applyBindings(new ViewModel());
       })
+
       .fail(function(){
         console.log('FourSquare API failed');
         fourSquareError();
       })
+
       .always(function(){
         console.log('FourSquare API complete');
   });
 }
 
-// =======================
-// === SetUp Venues ===
-// =======================
+
+// ========================
+// === SetUp Each Venue ===
+// ========================
 
 var Venue = function(map, venue) {
   var self = this;
@@ -76,6 +81,7 @@ var Venue = function(map, venue) {
   self.defaultIcon = makeMarkerIcon('D34836');
   self.hoverIcon = makeMarkerIcon('FFFF24');
 
+  // Create a new marker
   self.marker = (function() {
     var position = self.location;
     var name = self.name;
@@ -89,12 +95,15 @@ var Venue = function(map, venue) {
     return marker;
   })(self);
 
+  // Content that goes in info windows
   self.infoWindowContent = '<div>' +
                               '<div>' + self.name + '</div>' +
                               '<hr>' +
                               '<div>' +
-                                '<strong>' + 'Url: ' + '</strong>' +
-                                '<a href="'+self.url+'">' + self.url + '</a>' +
+                                '<strong>' + "Url: " + '</strong>' +
+                                '<a href="' + self.url + '">' +
+                                  self.url +
+                                '</a>' +
                               '<div>' +
                               '<div>' +
                                 '<strong>' + "Checkins: " + '</strong>' +
@@ -110,6 +119,7 @@ var Venue = function(map, venue) {
   });
 }
 
+
 // ================================
 // === SetUp Knockout ViewModel ===
 // ================================
@@ -118,20 +128,20 @@ var ViewModel = function() {
   var self = this;
 
   self.venues = venues;
-  console.log(self.venues);
   self.defaultIcon = makeMarkerIcon('D34836');
-  self.selectedIcon = makeMarkerIcon('FFaa24');
+  self.selectedIcon = makeMarkerIcon('FFAA24');
   self.query = ko.observable('');
   self.processedVenues = ko.observableArray([]);
 
   self.infoWindow = new google.maps.InfoWindow();
   self.showAlert = ko.observable(false);
 
-
+  // Take the raw venue data, then create array of venue with custom attributes
   self.venues.forEach(function(venue) {
     self.processedVenues().push(new Venue(map, venue));
   });
 
+  // Filter the markers in the list and on the map
   self.filteredMarkers = ko.computed(function() {
     // clear markers
     self.processedVenues().forEach(function(venue){
@@ -161,16 +171,7 @@ var ViewModel = function() {
     return queryResults;
   });
 
-  // self.showMarkers = ko.computed(function() {
-  //   var bounds = new google.maps.LatLngBounds();
-  //   // Extend the boundaries of the map for each marker and display the marker
-  //   self.filteredMarkers.forEach(function(marker) {
-  //     marker.setMap(map)
-  //     bounds.extend(marker.position);
-  //   })
-  //   map.fitBounds(bounds);
-  // });
-
+  // Select a venue from the list or the map
   self.selectVenue = function(selected_venue) {
 
     self.infoWindow.setContent(selected_venue.infoWindowContent);
@@ -178,8 +179,6 @@ var ViewModel = function() {
     self.infoWindow.addListener('closeclick', function() {
       selected_venue.marker.setAnimation(null);
     });
-
-    // populateInfoWindow(selected_venue.marker, self.infoWindow)
 
     map.panTo(selected_venue.marker.position);
     selected_venue.marker.setAnimation(google.maps.Animation.BOUNCE);
@@ -194,6 +193,7 @@ var ViewModel = function() {
   };
 
 }
+
 
 // ========================
 // === Helper Functions ===
@@ -213,63 +213,18 @@ function makeMarkerIcon(markerColor) {
   return markerImage;
 }
 
-
+// Handle and display errors from FourSquare API
 function fourSquareError() {
   var message = "We're sorry, the FourSquare API failed. Please reload.";
   $('.alert').toggle();
   $('.alert').html(message);
 }
 
+// Handle and display errors from Google API
 function mapError() {
   var message = "We're sorry, the Google Maps API failed. Please reload.";
   $('.alert').toggle();
   $('.alert').html(message);
-}
-
-// This function populates the infowindow when the marker is clicked. We'll only allow
-// one infowindow which will open at the marker that is clicked, and populate based
-// on that markers position.
-function populateInfoWindow(marker, infowindow) {
-  // Check to make sure the infowindow is not already opened on this marker.
-  if (infowindow.marker != marker) {
-    // Clear the infowindow content to give the streetview time to load.
-    // infowindow.setContent('');
-    infowindow.marker = marker;
-    // Make sure the marker property is cleared if the infowindow is closed.
-
-
-    infowindow.setContent(info)
-    // var streetViewService = new google.maps.StreetViewService();
-    // var radius = 50;
-    // In case the status is OK, which means the pano was found, compute the
-    // position of the streetview image, then calculate the heading, then get a
-    // panorama from that and set the options
-    // function getStreetView(data, status) {
-    //   if (status == google.maps.StreetViewStatus.OK) {
-    //     var nearStreetViewLocation = data.location.latLng;
-    //     var heading = google.maps.geometry.spherical.computeHeading(
-    //       nearStreetViewLocation, marker.position);
-    //       infowindow.setContent('<div>' + marker.name + '</div><div id="pano"></div>');
-    //       var panoramaOptions = {
-    //         position: nearStreetViewLocation,
-    //         pov: {
-    //           heading: heading,
-    //           pitch: 30
-    //         }
-    //       };
-    //     var panorama = new google.maps.StreetViewPanorama(
-    //       document.getElementById('pano'), panoramaOptions);
-    //   } else {
-    //     infowindow.setContent('<div>' + marker.name + '</div>' +
-    //       '<div>No Street View Found</div>');
-    //   }
-    // }
-    // Use streetview service to get the closest streetview image within
-    // 50 meters of the markers position
-    // streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-    // Open the infowindow on the correct marker.
-    infowindow.open(map, marker);
-  }
 }
 
 var app = function() {
