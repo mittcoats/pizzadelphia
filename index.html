@@ -16,36 +16,36 @@
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="#">Pizzadelphia</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <div class="input-group">
-        <span class="input-group-btn">
-          <button class="btn btn-secondary" type="submit">Filter</button>
-        </span>
-        <input type="search" class="form-control"
-               placeholder="Search for..."
-               aria-label="Search for..."
-               name="filter"
-               data-bind="textInput: query"
-               autocomplete="on">
-      </div>
-    </div>
   </nav>
 
   <div class="container-fluid">
+    <div class="row justify-content-md-center">
+      <div class="col-md-9 p-2">
+        <div class="alert alert-warning"
+             style="display:none"
+             role="alert">
+        </div>
+      </div>
+    </div>
     <div class="row">
       <!-- list of markers -->
       <div class="col-lg-3">
         <h4>Ovens</h4>
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button class="btn btn-secondary" type="submit">Filter</button>
+          </span>
+          <input type="search" class="form-control"
+                 placeholder="Find a pizza pie..."
+                 aria-label="Find a pizza pie..."
+                 name="filter"
+                 data-bind="textInput: query"
+                 autocomplete="on">
+        </div>
+        <hr>
         <ul class="list-group" data-bind="foreach: filteredMarkers">
-          <li class="list-group-item"
-              data-bind="text: name, click: $parent.selectLocation">
+          <li class="list-group-item" data-bind="click: $parent.selectVenue">
+              <span data-bind="text: name"></span>
           </li>
         </ul>
       </div>
@@ -54,7 +54,7 @@
       <div class="col-lg-9">
         <h4>Map</h4>
         <div id="map">
-          <p class="text-center">So sorry, we've experienced a map error</p>
+          <!-- <p class="text-center">So sorry, no map :(</p> -->
         </div>
       </div>
     </div>
@@ -63,20 +63,24 @@
   <!-- =*=*=* JavaScript =*=*=* -->
 
   <!-- Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script
+    src="http://code.jquery.com/jquery-3.2.1.min.js"
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+    crossorigin="anonymous">
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
 
   <!-- Knockout -->
   <script src="js/knockout-latest.js"></script>
-  <script src="js/pizzerias.js"></script>
+  <script src="js/map-styles.js"></script>
   <script src="js/app.js"></script>
 
   <!-- Google Maps -->
   <!-- Key: AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk -->
-
   <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk&callback=app">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk&callback=app"
+    onerror="mapError()">
   </script>
 
 </body>

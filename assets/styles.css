@@ -1,5 +1,10 @@
 
 #map {
-  height: 600px;
+  height: 700px;
   width: 100%;
+}
+
+ul {
+  height: 600px;
+  overflow-y: scroll;
 }

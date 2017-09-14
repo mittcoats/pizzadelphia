@@ -3,41 +3,81 @@
 // ========================
 // === SetUp Google Map ===
 // ========================
-
+// API sample query https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=39.9485647,-75.189752&type=restaurant&radius=500&keyword=pizza&key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk
+// API sample query https://maps.googleapis.com/maps/api/place/textsearch/json?query=pizza+philadelphia&radius=500&key=AIzaSyDskz8ZnlgufD_v1aVY3-KvdA_e85DZDBk
 var map;
+var venues;
 
 var googleMap = function() {
   var mapOptions = {
       center: { lat: 39.9485647, lng: -75.189752 },
       zoom: 13,
+      styles: styles,
       mapTypeControl: false
   };
   var mapCanvas = document.getElementById('map');
 
   map = new google.maps.Map(mapCanvas, mapOptions)
+  console.log('Google Maps API complete');
 }
 
-// ======================
-// === SetUp Yelp API ===
-// ======================
+// ============================
+// === SetUp FourSquare API ===
+// ============================
+
+var fourSquare = function() {
+  // Variables needed for FourSquare API query
+  var client_id = 'X04FYQTEYSWDMWR35D0GDYSP5XE4NQXPPQWHPUDNNZB35VNU';
+  var client_secret = 'Z32RGPHJSA52MQ1PC2D4YYBWOFOQRQOVBF00FANDQHXLIVIL';
+  var version = '20170101';
+  var near = 'philadelphia';
+  var query = 'pizza';
+  var url = 'https://api.foursquare.com/v2/venues/search';
+
+  // FourSquare API query
+  var fourSquareQuery = $.ajax({
+    url: url,
+    dataType: 'json',
+    data: {
+      near: near,
+      query: query,
+      client_id: client_id,
+      client_secret: client_secret,
+      v: version
+    },
+    async: true,
+    })
+      .done(function(data){
+        venues = data.response.venues;
+
+        ko.applyBindings(new ViewModel());
+      })
+      .fail(function(){
+        console.log('FourSquare API failed');
+        fourSquareError();
+      })
+      .always(function(){
+        console.log('FourSquare API complete');
+  });
+}
 
 // =======================
-// === SetUp Locations ===
+// === SetUp Venues ===
 // =======================
 
-var Location = function(map, google_data, yelp_data) {
+var Venue = function(map, venue) {
   var self = this;
-  self.name = google_data.name;
-  self.location = google_data.geometry.location;
-  self.googleRating = google_data.rating;
-  self.priceLevel = google_data.price_level;
-  self.yelpRating = '';
-
+  self.name = venue.name;
+  self.lat = venue.location.lat;
+  self.lng = venue.location.lng;
+  self.location = {lat: self.lat, lng: self.lng};
+  self.url = venue.url || 'n/a';
+  self.checkins = venue.stats.checkinsCount;
   self.defaultIcon = makeMarkerIcon('D34836');
-  self.highlightedIcon = makeMarkerIcon('FFFF24');
+  self.hoverIcon = makeMarkerIcon('FFFF24');
 
   self.marker = (function() {
-    var position = self.location
+    var position = self.location;
     var name = self.name;
     var marker = new google.maps.Marker({
       map: null,
@@ -50,14 +90,20 @@ var Location = function(map, google_data, yelp_data) {
   })(self);
 
   self.infoWindowContent = '<div>' +
-                             name +
-                           '</div><div id="pano"></div>';
+                              '<div>' + self.name + '</div>' +
+                              '<hr>' +
+                              '<div>' +
+                                '<strong>' + 'Url: ' + '</strong>' +
+                                '<a href="'+self.url+'">' + self.url + '</a>' +
+                              '<div>' +
+                              '<div>' +
+                                '<strong>' + "Checkins: " + '</strong>' +
+                                 self.checkins +
+                              '</div>' +
+                           '</div>';
 
-  self.marker.addListener('click', function() {
-    populateInfoWindow(this, self.infoWindow)
-  });
   self.marker.addListener('mouseover', function() {
-    this.setIcon(self.highlightedIcon);
+    this.setIcon(self.hoverIcon);
   });
   self.marker.addListener('mouseout', function() {
     this.setIcon(self.defaultIcon);
@@ -69,42 +115,49 @@ var Location = function(map, google_data, yelp_data) {
 // ================================
 
 var ViewModel = function() {
-  // Bind self to ViewModel
   var self = this;
-  self.google_locations = pizzerias;
+
+  self.venues = venues;
+  console.log(self.venues);
   self.defaultIcon = makeMarkerIcon('D34836');
-  self.highlightedIcon = makeMarkerIcon('FFFF24');
+  self.selectedIcon = makeMarkerIcon('FFaa24');
   self.query = ko.observable('');
-  self.locations = ko.observableArray([]);
+  self.processedVenues = ko.observableArray([]);
 
   self.infoWindow = new google.maps.InfoWindow();
+  self.showAlert = ko.observable(false);
 
-  self.google_locations.forEach(function(google_location) {
-    self.locations().push(new Location(map, google_location));
+
+  self.venues.forEach(function(venue) {
+    self.processedVenues().push(new Venue(map, venue));
   });
 
   self.filteredMarkers = ko.computed(function() {
     // clear markers
-    self.locations().forEach(function(location){
-      location.marker.setMap(null);
+    self.processedVenues().forEach(function(venue){
+      venue.marker.setMap(null);
     })
     // Get query and declare variable to hold array of results
     var processedQuery = self.query().toLowerCase();
     var queryResults;
 
     if (processedQuery === "") {
-      queryResults = self.locations();
+      queryResults = self.processedVenues();
     } else {
-        queryResults = ko.utils.arrayFilter(self.locations(),
-         function(location) {
-          return location.marker.name.toLowerCase().includes(processedQuery);
+        queryResults = ko.utils.arrayFilter(self.processedVenues(),
+         function(venue) {
+          return venue.marker.name.toLowerCase().includes(processedQuery);
       });
     }
 
-    queryResults.forEach(function(location) {
-      location.marker.setMap(map);
+    queryResults.forEach(function(venue) {
+      venue.marker.setMap(map);
+
+      venue.infoWindow = self.infoWindow
+      venue.marker.addListener('click', function() {
+        self.selectVenue(venue);
+      });
     });
-    console.log(queryResults);
     return queryResults;
   });
 
@@ -118,18 +171,24 @@ var ViewModel = function() {
   //   map.fitBounds(bounds);
   // });
 
-  self.selectLocation = function(selected_location) {
-    console.log(selected_location);
-    self.infoWindow.setContent(selected_location.infoWindow)
-    self.infoWindow.open(map, selected_location.marker)
-    map.panTo(selected_location.marker.position);
-    selected_location.marker.setAnimation(google.maps.Animation.BOUNCE);
-    selected_location.marker.setIcon(self.highlightedIcon);
+  self.selectVenue = function(selected_venue) {
 
-    self.locations().forEach(function(unselected_location) {
-      if (selected_location != unselected_location) {
-        unselected_location.marker.setAnimation(null);
-        unselected_location.marker.setIcon(self.defaultIcon);
+    self.infoWindow.setContent(selected_venue.infoWindowContent);
+    self.infoWindow.open(map, selected_venue.marker)
+    self.infoWindow.addListener('closeclick', function() {
+      selected_venue.marker.setAnimation(null);
+    });
+
+    // populateInfoWindow(selected_venue.marker, self.infoWindow)
+
+    map.panTo(selected_venue.marker.position);
+    selected_venue.marker.setAnimation(google.maps.Animation.BOUNCE);
+    selected_venue.marker.setIcon(self.selectedIcon);
+
+    self.processedVenues().forEach(function(unselected_venue) {
+      if (selected_venue != unselected_venue) {
+        unselected_venue.marker.setAnimation(null);
+        unselected_venue.marker.setIcon(self.defaultIcon);
       }
     });
   };
@@ -154,6 +213,19 @@ function makeMarkerIcon(markerColor) {
   return markerImage;
 }
 
+
+function fourSquareError() {
+  var message = "We're sorry, the FourSquare API failed. Please reload.";
+  $('.alert').toggle();
+  $('.alert').html(message);
+}
+
+function mapError() {
+  var message = "We're sorry, the Google Maps API failed. Please reload.";
+  $('.alert').toggle();
+  $('.alert').html(message);
+}
+
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
 // on that markers position.
@@ -161,40 +233,40 @@ function populateInfoWindow(marker, infowindow) {
   // Check to make sure the infowindow is not already opened on this marker.
   if (infowindow.marker != marker) {
     // Clear the infowindow content to give the streetview time to load.
-    infowindow.setContent('');
+    // infowindow.setContent('');
     infowindow.marker = marker;
     // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener('closeclick', function() {
-      infowindow.marker = null;
-    });
-    var streetViewService = new google.maps.StreetViewService();
-    var radius = 50;
+
+
+    infowindow.setContent(info)
+    // var streetViewService = new google.maps.StreetViewService();
+    // var radius = 50;
     // In case the status is OK, which means the pano was found, compute the
     // position of the streetview image, then calculate the heading, then get a
     // panorama from that and set the options
-    function getStreetView(data, status) {
-      if (status == google.maps.StreetViewStatus.OK) {
-        var nearStreetViewLocation = data.location.latLng;
-        var heading = google.maps.geometry.spherical.computeHeading(
-          nearStreetViewLocation, marker.position);
-          infowindow.setContent('<div>' + marker.name + '</div><div id="pano"></div>');
-          var panoramaOptions = {
-            position: nearStreetViewLocation,
-            pov: {
-              heading: heading,
-              pitch: 30
-            }
-          };
-        var panorama = new google.maps.StreetViewPanorama(
-          document.getElementById('pano'), panoramaOptions);
-      } else {
-        infowindow.setContent('<div>' + marker.name + '</div>' +
-          '<div>No Street View Found</div>');
-      }
-    }
+    // function getStreetView(data, status) {
+    //   if (status == google.maps.StreetViewStatus.OK) {
+    //     var nearStreetViewLocation = data.location.latLng;
+    //     var heading = google.maps.geometry.spherical.computeHeading(
+    //       nearStreetViewLocation, marker.position);
+    //       infowindow.setContent('<div>' + marker.name + '</div><div id="pano"></div>');
+    //       var panoramaOptions = {
+    //         position: nearStreetViewLocation,
+    //         pov: {
+    //           heading: heading,
+    //           pitch: 30
+    //         }
+    //       };
+    //     var panorama = new google.maps.StreetViewPanorama(
+    //       document.getElementById('pano'), panoramaOptions);
+    //   } else {
+    //     infowindow.setContent('<div>' + marker.name + '</div>' +
+    //       '<div>No Street View Found</div>');
+    //   }
+    // }
     // Use streetview service to get the closest streetview image within
     // 50 meters of the markers position
-    streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+    // streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
     // Open the infowindow on the correct marker.
     infowindow.open(map, marker);
   }
@@ -202,5 +274,5 @@ function populateInfoWindow(marker, infowindow) {
 
 var app = function() {
   googleMap();
-  ko.applyBindings(new ViewModel());
+  fourSquare();
 };
