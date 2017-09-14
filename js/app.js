@@ -1,4 +1,6 @@
-'use strict';
+(function(){
+  'use strict';
+}());
 
 var map;
 var venues;
@@ -19,9 +21,9 @@ var googleMap = function() {
   };
   var mapCanvas = document.getElementById('map');
 
-  map = new google.maps.Map(mapCanvas, mapOptions)
+  map = new google.maps.Map(mapCanvas, mapOptions);
   console.log('Google Maps API complete');
-}
+};
 
 
 // ============================
@@ -63,7 +65,7 @@ var fourSquare = function() {
       .always(function(){
         console.log('FourSquare API complete');
   });
-}
+};
 
 
 // ========================
@@ -117,7 +119,7 @@ var Venue = function(map, venue) {
   self.marker.addListener('mouseout', function() {
     this.setIcon(self.defaultIcon);
   });
-}
+};
 
 
 // ================================
@@ -146,7 +148,7 @@ var ViewModel = function() {
     // clear markers
     self.processedVenues().forEach(function(venue){
       venue.marker.setMap(null);
-    })
+    });
     // Get query and declare variable to hold array of results
     var processedQuery = self.query().toLowerCase();
     var queryResults;
@@ -163,7 +165,7 @@ var ViewModel = function() {
     queryResults.forEach(function(venue) {
       venue.marker.setMap(map);
 
-      venue.infoWindow = self.infoWindow
+      venue.infoWindow = self.infoWindow;
       venue.marker.addListener('click', function() {
         self.selectVenue(venue);
       });
@@ -175,7 +177,7 @@ var ViewModel = function() {
   self.selectVenue = function(selected_venue) {
 
     self.infoWindow.setContent(selected_venue.infoWindowContent);
-    self.infoWindow.open(map, selected_venue.marker)
+    self.infoWindow.open(map, selected_venue.marker);
     self.infoWindow.addListener('closeclick', function() {
       selected_venue.marker.setAnimation(null);
     });
@@ -192,7 +194,7 @@ var ViewModel = function() {
     });
   };
 
-}
+};
 
 
 // ========================
