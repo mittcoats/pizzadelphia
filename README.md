@@ -15,7 +15,7 @@ for the Udacity fullstack nano degree.
 [FourSquare API API](https://developer.foursquare.com/docs/)
 
 ## Sources
-https://github.com/cardvark/neighborhood-map-udacity
-https://github.com/sivcan/Neighborhood-Map
-http://api.jquery.com/jquery.ajax/
-https://developer.foursquare.com/docs/
+- https://github.com/cardvark/neighborhood-map-udacity
+- https://github.com/sivcan/Neighborhood-Map
+- http://api.jquery.com/jquery.ajax/
+- https://developer.foursquare.com/docs/
