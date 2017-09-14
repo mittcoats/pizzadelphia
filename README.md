@@ -13,7 +13,7 @@ Alternatively, you can clone or download the repository, and then open the
 index.html in browser of your choice.
 
 
-## Libraries and Resources
+#### Libraries and Resources
 - [Google Maps API](https://developers.google.com/maps/documentation/javascript/adding-a-google-map)
 - [FourSquare API API](https://developer.foursquare.com/docs/)
 - [Bootstrap](https://getbootstrap.com/docs/4.0/getting-started/introduction/)
@@ -21,7 +21,7 @@ index.html in browser of your choice.
 - [jQuery](http://api.jquery.com/)
 
 
-## Inspiration and Citations
+#### Inspiration and Citations
 - [stackoverflow](www.stackoverflow.com)
 - https://github.com/cardvark/neighborhood-map-udacity
 - https://github.com/sivcan/Neighborhood-Map
