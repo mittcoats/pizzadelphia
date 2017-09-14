@@ -6,8 +6,7 @@ a nearby search and query.
 This app is the "Neighborhood Map App" for the culminating project
 for the Udacity fullstack nano degree.
 
-### You can run the app
-[here](https://mittcoats.github.io/pizzadelphia/)
+### You can run the app [here](https://mittcoats.github.io/pizzadelphia/)
 
 ## Google Maps api
 [Google Maps API](https://developers.google.com/maps/documentation/javascript/adding-a-google-map)
