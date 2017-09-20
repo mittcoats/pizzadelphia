@@ -178,6 +178,7 @@ var ViewModel = function() {
 
     self.infoWindow.setContent(selected_venue.infoWindowContent);
     self.infoWindow.open(map, selected_venue.marker);
+    map.panTo(selected_venue.marker.getPosition());
     self.infoWindow.addListener('closeclick', function() {
       selected_venue.marker.setAnimation(null);
     });
